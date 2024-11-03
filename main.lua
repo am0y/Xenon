@@ -11,8 +11,8 @@ end)
 
 --// Environment
 
-getgenv().Aimbot = {}
-local Environment = getgenv().Aimbot
+getgenv().Xenon = {}
+local Environment = getgenv().Xenon
 
 --// Services
 
