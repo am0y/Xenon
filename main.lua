@@ -60,6 +60,18 @@ Environment.FOVCircle = Drawing.new("Circle")
 
 --// Functions
 
+local function ClampPrediction(origin, predicted, maxAngle)
+    local direction = (predicted - origin).Unit
+    local currentAngle = math.acos(Camera.CFrame.LookVector:Dot(direction))
+    
+    if currentAngle > math.rad(maxAngle) then
+        local clampedDirection = Camera.CFrame.LookVector:Lerp(direction, math.rad(maxAngle)/currentAngle)
+        return origin + clampedDirection * (predicted - origin).Magnitude
+    end
+    
+    return predicted
+end
+
 local function isVisible(p, target)
     if not Environment.Settings.WallCheck then
         return true
@@ -139,20 +151,35 @@ local function Load()
 				else
 					if Environment.Settings.Sensitivity > 0 then
 						if Environment.Settings.Prediction then
-							local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
-							local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
-							Position = Position + (Velocity * Environment.Settings.PredictionAmount)
-							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Position)})
+                            local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
+                            local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
+                            local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
+                            
+                            local ClampedPosition = ClampPrediction(
+                                Camera.CFrame.Position,
+                                PredictedPosition,
+                                Environment.FOVSettings.Amount / 2
+                            )
+                            
+                            Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, ClampedPosition)})
+                            Animation:Play()
 						else
 							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)})
+                            Animation:Play()
 						end
-						Animation:Play()
 					else
 						if Environment.Settings.Prediction then
-							local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
-							local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
-							Position = Position + (Velocity * Environment.Settings.PredictionAmount)
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, Position)
+                            local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
+                            local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
+                            local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
+                            
+                            local ClampedPosition = ClampPrediction(
+                                Camera.CFrame.Position,
+                                PredictedPosition,
+                                Environment.FOVSettings.Amount / 2
+                            )
+                            
+                            Camera.CFrame = CFrame.new(Camera.CFrame.Position, ClampedPosition)
 						else
 							Camera.CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)
 						end
