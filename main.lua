@@ -6,13 +6,13 @@ local pcall, getgenv, next, Vector2, mathclamp, type, mousemoverel = select(1, p
 --// Preventing Multiple Processes
 
 pcall(function()
-	getgenv().Xenon.Functions:Exit()
+	getgenv().Aimbot.Functions:Exit()
 end)
 
 --// Environment
 
-getgenv().Xenon = {}
-local Environment = getgenv().Xenon
+getgenv().Aimbot = {}
+local Environment = getgenv().Aimbot
 
 --// Services
 
@@ -226,8 +226,8 @@ function Environment.Functions:Exit()
 
 	if Environment.FOVCircle.Remove then Environment.FOVCircle:Remove() end
 
-	getgenv().Xenon.Functions = nil
-	getgenv().Xenon = nil
+	getgenv().Aimbot.Functions = nil
+	getgenv().Aimbot = nil
 	
 	Load = nil; GetClosestPlayer = nil; CancelLock = nil
 end
