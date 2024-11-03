@@ -4,16 +4,16 @@ local loadstring, game, getgenv, setclipboard = loadstring, game, getgenv, setcl
 
 --// Loaded check
 
-if getgenv().Xenon then return end
+if getgenv().Aimbot then return end
 
 --// Load Aimbot V2 (Raw)
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/am0y/Xenon/main/main.lua"))()
-o
+
 --// Variables
 
-local Xenon = getgenv().Xenon
-local Settings, FOVSettings, Functions = Xenon.Settings, Xenon.FOVSettings, Xenon.Functions
+local Aimbot = getgenv().Aimbot
+local Settings, FOVSettings, Functions = Aimbot.Settings, Aimbot.FOVSettings, Aimbot.Functions
 
 local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
 
@@ -24,18 +24,28 @@ local Parts = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Le
 Library.UnloadCallback = Functions.Exit
 
 local MainFrame = Library:CreateWindow({
-	Name = "Xenon",
-	Theme = [[{"__Designer.Colors.section":"1A0F0F","__Designer.Colors.topGradient":"0A0404","__Designer.Settings.ShowHideKey":"Enum.KeyCode.RightShift","__Designer.Colors.otherElementText":"4D2929","__Designer.Colors.hoveredOptionBottom":"7D2626","__Designer.Colors.unhoveredOptionTop":"952424","__Designer.Colors.innerBorder":"681C1C","__Designer.Colors.unselectedOption":"A02E2E","__Designer.Colors.main":"FF2323","__Designer.Colors.outerBorder":"430F0F","__Designer.Colors.tabText":"F1C9C9","__Designer.Colors.elementBorder":"260F0F","__Designer.Colors.sectionBackground":"1C0E0E","__Designer.Colors.selectedOption":"C25555","__Designer.Colors.background":"2A1111","__Designer.Colors.bottomGradient":"421515","__Designer.Colors.hoveredOptionTop":"A04848","__Designer.Colors.elementText":"B87676","__Designer.Colors.unhoveredOptionBottom":"C45454"}]]
+	Name = "Aimbot",
+	Themeable = {
+		Image = "7059346386",
+		Info = "Made by Naj",
+		Credit = false
+	},
+	Background = "",
+	Theme = [[{"__Designer.Colors.section":"ADC7FF","__Designer.Colors.topGradient":"1B242F","__Designer.Settings.ShowHideKey":"Enum.KeyCode.RightShift","__Designer.Colors.otherElementText":"54637D","__Designer.Colors.hoveredOptionBottom":"38667D","__Designer.Background.ImageAssetID":"","__Designer.Colors.unhoveredOptionTop":"407495","__Designer.Colors.innerBorder":"2C4168","__Designer.Colors.unselectedOption":"4E6EA0","__Designer.Background.UseBackgroundImage":true,"__Designer.Files.WorkspaceFile":"Aimbot V2","__Designer.Colors.main":"23A0FF","__Designer.Colors.outerBorder":"162943","__Designer.Background.ImageColor":"FFFFFF","__Designer.Colors.tabText":"C9DFF1","__Designer.Colors.elementBorder":"111D26","__Designer.Colors.sectionBackground":"0E141C","__Designer.Colors.selectedOption":"558AC2","__Designer.Colors.background":"11182A","__Designer.Colors.bottomGradient":"202B42","__Designer.Background.ImageTransparency":95,"__Designer.Colors.hoveredOptionTop":"4885A0","__Designer.Colors.elementText":"7692B8","__Designer.Colors.unhoveredOptionBottom":"5471C4"}]]
 })
 
 --// Tabs
 
-local AimbotTab = MainFrame:CreateTab({
-	Name = "Aimbot"
+local SettingsTab = MainFrame:CreateTab({
+	Name = "Settings"
 })
 
-local FOVTab = MainFrame:CreateTab({
-	Name = "FOV"
+local FOVSettingsTab = MainFrame:CreateTab({
+	Name = "FOV Settings"
+})
+
+local FunctionsTab = MainFrame:CreateTab({
+	Name = "Functions"
 })
 
 --// Settings - Sections
@@ -60,6 +70,12 @@ local FOV_Values = FOVSettingsTab:CreateSection({
 
 local FOV_Appearance = FOVSettingsTab:CreateSection({
 	Name = "Appearance"
+})
+
+--// Functions - Sections
+
+local FunctionsSection = FunctionsTab:CreateSection({
+	Name = "Functions"
 })
 
 --// Settings / Values
@@ -98,6 +114,17 @@ Values:AddTextbox({ -- Using a Textbox instead of a Keybind because the UI Libra
 	end
 }).Default = Settings.TriggerKey
 
+Values:AddSlider({
+	Name = "Sensitivity",
+	Value = Settings.Sensitivity,
+	Callback = function(New, Old)
+		Settings.Sensitivity = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.Sensitivity
+
 Values:AddToggle({
 	Name = "Prediction",
 	Value = Settings.Prediction,
@@ -116,17 +143,6 @@ Values:AddSlider({
 	Max = 1,
 	Decimals = 2
 }).Default = Settings.PredictionAmount
-
-Values:AddSlider({
-	Name = "Sensitivity",
-	Value = Settings.Sensitivity,
-	Callback = function(New, Old)
-		Settings.Sensitivity = New
-	end,
-	Min = 0,
-	Max = 1,
-	Decimals = 2
-}).Default = Settings.Sensitivity
 
 --// Settings / Checks
 
@@ -260,3 +276,32 @@ FOV_Appearance:AddColorpicker({
 	end
 }).Default = FOVSettings.LockedColor
 
+--// Functions / Functions
+
+FunctionsSection:AddButton({
+	Name = "Reset Settings",
+	Callback = function()
+		Functions.ResetSettings()
+		Library.ResetAll()
+	end
+})
+
+FunctionsSection:AddButton({
+	Name = "Restart",
+	Callback = Functions.Restart
+})
+
+FunctionsSection:AddButton({
+	Name = "Exit",
+	Callback = function()
+		Functions:Exit()
+		Library.Unload()
+	end
+})
+
+FunctionsSection:AddButton({
+	Name = "Copy Script Page",
+	Callback = function()
+		setclipboard("https://github.com/Exunys/Aimbot-V2")
+	end
+})
