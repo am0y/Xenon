@@ -6,7 +6,11 @@ local loadstring, game, getgenv, setclipboard = loadstring, game, getgenv, setcl
 
 if getgenv().Xenon then return end
 
+<<<<<<< HEAD
 --// Load Xenon
+=======
+--// Load Xenon (Raw)
+>>>>>>> 07b88f83bad0f8820f71ee338daa44200118218f
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/am0y/Xenon/main/main.lua"))()
 
@@ -37,11 +41,19 @@ local MainFrame = Library:CreateWindow({
 --// Tabs
 
 local SettingsTab = MainFrame:CreateTab({
+<<<<<<< HEAD
 	Name = "Aimbot"
 })
 
 local FOVSettingsTab = MainFrame:CreateTab({
 	Name = "FOV"
+=======
+	Name = "Settings"
+})
+
+local FOVSettingsTab = MainFrame:CreateTab({
+	Name = "FOV Settings"
+>>>>>>> 07b88f83bad0f8820f71ee338daa44200118218f
 })
 
 local FunctionsTab = MainFrame:CreateTab({
