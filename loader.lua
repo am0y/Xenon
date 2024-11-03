@@ -37,11 +37,11 @@ local MainFrame = Library:CreateWindow({
 --// Tabs
 
 local SettingsTab = MainFrame:CreateTab({
-	Name = "Settings"
+	Name = "Aimbot"
 })
 
 local FOVSettingsTab = MainFrame:CreateTab({
-	Name = "FOV Settings"
+	Name = "FOV"
 })
 
 local FunctionsTab = MainFrame:CreateTab({
