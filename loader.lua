@@ -6,14 +6,14 @@ local loadstring, game, getgenv, setclipboard = loadstring, game, getgenv, setcl
 
 if getgenv().Aimbot then return end
 
---// Load Aimbot V2 (Raw)
+--// Load Xenon (Raw)
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/am0y/Xenon/main/main.lua"))()
 
 --// Variables
 
 local Aimbot = getgenv().Aimbot
-local Settings, FOVSettings, Functions = Aimbot.Settings, Aimbot.FOVSettings, Aimbot.Functions
+local Settings, FOVSettings = Aimbot.Settings, Aimbot.FOVSettings
 
 local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
 
@@ -21,64 +21,54 @@ local Parts = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Le
 
 --// Frame
 
-Library.UnloadCallback = Functions.Exit
+Library.UnloadCallback = Aimbot.Functions.Exit
 
 local MainFrame = Library:CreateWindow({
-	Name = "Aimbot",
+	Name = "Xenon",
 	Themeable = {
 		Image = "7059346386",
 		Info = "Made by Naj",
 		Credit = false
 	},
 	Background = "",
-	Theme = [[{"__Designer.Colors.section":"ADC7FF","__Designer.Colors.topGradient":"1B242F","__Designer.Settings.ShowHideKey":"Enum.KeyCode.RightShift","__Designer.Colors.otherElementText":"54637D","__Designer.Colors.hoveredOptionBottom":"38667D","__Designer.Background.ImageAssetID":"","__Designer.Colors.unhoveredOptionTop":"407495","__Designer.Colors.innerBorder":"2C4168","__Designer.Colors.unselectedOption":"4E6EA0","__Designer.Background.UseBackgroundImage":true,"__Designer.Files.WorkspaceFile":"Aimbot V2","__Designer.Colors.main":"23A0FF","__Designer.Colors.outerBorder":"162943","__Designer.Background.ImageColor":"FFFFFF","__Designer.Colors.tabText":"C9DFF1","__Designer.Colors.elementBorder":"111D26","__Designer.Colors.sectionBackground":"0E141C","__Designer.Colors.selectedOption":"558AC2","__Designer.Colors.background":"11182A","__Designer.Colors.bottomGradient":"202B42","__Designer.Background.ImageTransparency":95,"__Designer.Colors.hoveredOptionTop":"4885A0","__Designer.Colors.elementText":"7692B8","__Designer.Colors.unhoveredOptionBottom":"5471C4"}]]
+	Theme = [[{"__Designer.Colors.section":"FFAAAA","__Designer.Colors.topGradient":"4D0000","__Designer.Settings.ShowHideKey":"Enum.KeyCode.RightShift","__Designer.Colors.otherElementText":"FFBBBB","__Designer.Colors.hoveredOptionBottom":"FF4444","__Designer.Background.ImageAssetID":"","__Designer.Colors.unhoveredOptionTop":"FF5555","__Designer.Colors.innerBorder":"800000","__Designer.Colors.unselectedOption":"FF6666","__Designer.Background.UseBackgroundImage":true,"__Designer.Files.WorkspaceFile":"Xenon","__Designer.Colors.main":"FF2222","__Designer.Colors.outerBorder":"330000","__Designer.Background.ImageColor":"FFEEEE","__Designer.Colors.tabText":"FFDDDD","__Designer.Colors.elementBorder":"440000","__Designer.Colors.sectionBackground":"330000","__Designer.Colors.selectedOption":"FF7777","__Designer.Colors.background":"220000","__Designer.Colors.bottomGradient":"550000","__Designer.Background.ImageTransparency":95,"__Designer.Colors.hoveredOptionTop":"FF8888","__Designer.Colors.elementText":"FFCCCC","__Designer.Colors.unhoveredOptionBottom":"FF9999"}]]
 })
 
 --// Tabs
 
-local SettingsTab = MainFrame:CreateTab({
-	Name = "Settings"
+local AimbotTab = MainFrame:CreateTab({
+	Name = "Aimbot"
 })
 
-local FOVSettingsTab = MainFrame:CreateTab({
-	Name = "FOV Settings"
+local FOVTab = MainFrame:CreateTab({
+	Name = "FOV"
 })
 
-local FunctionsTab = MainFrame:CreateTab({
-	Name = "Functions"
-})
+--// Aimbot - Sections
 
---// Settings - Sections
-
-local Values = SettingsTab:CreateSection({
+local Values = AimbotTab:CreateSection({
 	Name = "Values"
 })
 
-local Checks = SettingsTab:CreateSection({
+local Checks = AimbotTab:CreateSection({
 	Name = "Checks"
 })
 
-local ThirdPerson = SettingsTab:CreateSection({
+local ThirdPerson = AimbotTab:CreateSection({
 	Name = "Third Person"
 })
 
---// FOV Settings - Sections
+--// FOV - Sections
 
-local FOV_Values = FOVSettingsTab:CreateSection({
+local FOV_Values = FOVTab:CreateSection({
 	Name = "Values"
 })
 
-local FOV_Appearance = FOVSettingsTab:CreateSection({
+local FOV_Appearance = FOVTab:CreateSection({
 	Name = "Appearance"
 })
 
---// Functions - Sections
-
-local FunctionsSection = FunctionsTab:CreateSection({
-	Name = "Functions"
-})
-
---// Settings / Values
+--// Aimbot / Values
 
 Values:AddToggle({
 	Name = "Enabled",
@@ -114,7 +104,7 @@ Settings.LockPart = Parts[1]; Values:AddDropdown({
 	Nothing = "Head"
 }).Default = Parts[1]
 
-Values:AddTextbox({ -- Using a Textbox instead of a Keybind because the UI Library doesn't support Mouse inputs like Left Click / Right Click...
+Values:AddTextbox({
 	Name = "Hotkey",
 	Value = Settings.TriggerKey,
 	Callback = function(New, Old)
@@ -152,7 +142,7 @@ Values:AddSlider({
 	Decimals = 2
 }).Default = Settings.PredictionAmount
 
---// Settings / Checks
+--// Aimbot / Checks
 
 Checks:AddToggle({
 	Name = "Team Check",
@@ -178,7 +168,7 @@ Checks:AddToggle({
 	end
 }).Default = Settings.AliveCheck
 
---// Settings / ThirdPerson
+--// Aimbot / ThirdPerson
 
 ThirdPerson:AddToggle({
 	Name = "Enable Third Person",
@@ -199,7 +189,7 @@ ThirdPerson:AddSlider({
 	Decimals = 1
 }).Default = Settings.ThirdPersonSensitivity
 
---// FOV Settings / Values
+--// FOV / Values
 
 FOV_Values:AddToggle({
 	Name = "Enabled",
@@ -227,7 +217,7 @@ FOV_Values:AddSlider({
 	Max = 300
 }).Default = FOVSettings.Amount
 
---// FOV Settings / Appearance
+--// FOV / Appearance
 
 FOV_Appearance:AddToggle({
 	Name = "Filled",
@@ -283,33 +273,3 @@ FOV_Appearance:AddColorpicker({
 		FOVSettings.LockedColor = New
 	end
 }).Default = FOVSettings.LockedColor
-
---// Functions / Functions
-
-FunctionsSection:AddButton({
-	Name = "Reset Settings",
-	Callback = function()
-		Functions.ResetSettings()
-		Library.ResetAll()
-	end
-})
-
-FunctionsSection:AddButton({
-	Name = "Restart",
-	Callback = Functions.Restart
-})
-
-FunctionsSection:AddButton({
-	Name = "Exit",
-	Callback = function()
-		Functions:Exit()
-		Library.Unload()
-	end
-})
-
-FunctionsSection:AddButton({
-	Name = "Copy Script Page",
-	Callback = function()
-		setclipboard("https://github.com/Exunys/Aimbot-V2")
-	end
-})
