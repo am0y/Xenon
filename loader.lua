@@ -135,7 +135,7 @@ Values:AddSlider({
 	Name = "Smoothness",
 	Value = Settings.Sensitivity,
 	Callback = function(New, Old)
-		Settings.Smoothness = New
+		Settings.Sensitivity = New
 	end,
 	Min = 0,
 	Max = 1,
