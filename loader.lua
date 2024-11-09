@@ -87,7 +87,7 @@ Values:AddToggle({
 }).Default = Settings.Toggle
 
 Values:AddToggle({
-	Name = "Sticky Aim",
+	Name = "Sticky",
 	Value = Settings.StickyAim,
 	Callback = function(New, Old)
 		Settings.StickyAim = New
