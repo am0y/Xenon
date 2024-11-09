@@ -41,7 +41,8 @@ Environment.Settings = {
 	Toggle = false,
 	LockPart = "Head", -- Body part to lock on
 	Prediction = false,
-	PredictionAmount = 0.165
+	PredictionAmount = 0.165,
+    StickyAim = false
 }
 
 Environment.FOVSettings = {
@@ -111,6 +112,21 @@ local function GetClosestPlayer()
             CancelLock()
             return
         end
+        
+        if not Environment.Settings.StickyAim then
+            local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
+            if Environment.Settings.Prediction then
+                local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
+                Position = Position + (Velocity * Environment.Settings.PredictionAmount)
+            end
+            
+            local Vector, OnScreen = Camera:WorldToViewportPoint(Position)
+            local Distance = (Vector2(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2(Vector.X, Vector.Y)).Magnitude
+            
+            if Distance > RequiredDistance or not OnScreen then
+                CancelLock()
+            end
+        end
     else
         CancelLock()
     end
@@ -156,13 +172,13 @@ local function Load()
 					if Environment.Settings.Prediction then
 						local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
 						local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
-						Position = Position + (Velocity * Environment.Settings.PredictionAmount)
-
+						local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
+						
 						if Environment.Settings.Sensitivity > 0 then
-							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Position)})
+							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
 							Animation:Play()
 						else
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, Position)
+							Camera.CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)
 						end
 					else
 						if Environment.Settings.Sensitivity > 0 then
@@ -268,7 +284,8 @@ function Environment.Functions:ResetSettings()
 		Toggle = false,
 		LockPart = "Head",
 		Prediction = false,
-		PredictionAmount = 0.165
+		PredictionAmount = 0.165,
+        StickyAim = false
 	}
 
 	Environment.FOVSettings = {
