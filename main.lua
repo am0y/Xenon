@@ -33,13 +33,11 @@ Environment.Settings = {
 	Enabled = true,
 	TeamCheck = false,
 	AliveCheck = true,
-	WallCheck = false, -- Laggy
-	Sensitivity = 0, -- Animation length (in seconds) before fully locking onto target
-	ThirdPerson = false, -- Uses mousemoverel instead of CFrame to support locking in third person (could be choppy)
-	ThirdPersonSensitivity = 3, -- Boundary: 0.1 - 5
+	WallCheck = false,
+	Sensitivity = 0,
 	TriggerKey = "MouseButton2",
 	Toggle = false,
-	LockPart = "Head", -- Body part to lock on
+	LockPart = "Head",
 	Prediction = false,
 	PredictionAmount = 0.165,
     StickyAim = false
@@ -163,30 +161,23 @@ local function Load()
 			GetClosestPlayer()
 
 			if Environment.Locked then
-				if Environment.Settings.ThirdPerson then
-					Environment.Settings.ThirdPersonSensitivity = mathclamp(Environment.Settings.ThirdPersonSensitivity, 0.1, 5)
-
-					local Vector = Camera:WorldToViewportPoint(Environment.Locked.Character[Environment.Settings.LockPart].Position)
-					mousemoverel((Vector.X - UserInputService:GetMouseLocation().X) * Environment.Settings.ThirdPersonSensitivity, (Vector.Y - UserInputService:GetMouseLocation().Y) * Environment.Settings.ThirdPersonSensitivity)
-				else
-					if Environment.Settings.Prediction then
-						local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
-						local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
-						local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
-						
-						if Environment.Settings.Sensitivity > 0 then
-							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
-							Animation:Play()
-						else
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)
-						end
+				if Environment.Settings.Prediction then
+					local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
+					local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
+					local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
+					
+					if Environment.Settings.Sensitivity > 0 then
+						Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
+						Animation:Play()
 					else
-						if Environment.Settings.Sensitivity > 0 then
-							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)})
-							Animation:Play()
-						else
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)
-						end
+						Camera.CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)
+					end
+				else
+					if Environment.Settings.Sensitivity > 0 then
+						Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)})
+						Animation:Play()
+					else
+						Camera.CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)
 					end
 				end
 
@@ -278,8 +269,6 @@ function Environment.Functions:ResetSettings()
 		AliveCheck = true,
 		WallCheck = false,
 		Sensitivity = 0,
-		ThirdPerson = false,
-		ThirdPersonSensitivity = 3,
 		TriggerKey = "MouseButton2",
 		Toggle = false,
 		LockPart = "Head",
