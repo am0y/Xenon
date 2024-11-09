@@ -96,6 +96,14 @@ Values:AddToggle({
 	end
 }).Default = Settings.Toggle
 
+Values:AddToggle({
+	Name = "Sticky Aim",
+	Value = Settings.StickyAim,
+	Callback = function(New, Old)
+		Settings.StickyAim = New
+	end
+}).Default = Settings.StickyAim
+
 Settings.LockPart = Parts[1]; Values:AddDropdown({
 	Name = "Lock Part",
 	Value = Parts[1],
