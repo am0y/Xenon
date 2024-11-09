@@ -13,9 +13,10 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/am0y/Xenon/main/main.
 --// Variables
 
 local Aimbot = getgenv().Aimbot
-local Settings, FOVSettings, Functions = Aimbot.Settings, Aimbot.FOVSettings, Aimbot.Functions
+local Settings, FOVSettings = Aimbot.Settings, Aimbot.FOVSettings
 
-local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
+local HttpService = game:GetService("HttpService")
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/Library.lua"))()
 
 local Parts = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}
 
@@ -36,299 +37,264 @@ local ConfigSystem = {
             Settings = Settings,
             FOVSettings = FOVSettings
         }
-        
-        local success, encoded = pcall(game.HttpService.JSONEncode, game.HttpService, config)
-        if success then
-            writefile(ConfigSystem.FolderName .. "/" .. name .. ConfigSystem.ConfigExtension, encoded)
-            return true
-        end
-        return false
+        writefile(ConfigSystem.FolderName .. "/" .. name .. ConfigSystem.ConfigExtension, HttpService:JSONEncode(config))
     end,
     
     LoadConfig = function(name)
-        local path = ConfigSystem.FolderName .. "/" .. name .. ConfigSystem.ConfigExtension
-        if not isfile(path) then return false end
-        
-        local success, decoded = pcall(game.HttpService.JSONDecode, game.HttpService, readfile(path))
-        if success then
-            for i, v in pairs(decoded.Settings) do
-                Settings[i] = v
-            end
-            for i, v in pairs(decoded.FOVSettings) do
-                FOVSettings[i] = v
-            end
-            return true
+        local data = readfile(ConfigSystem.FolderName .. "/" .. name .. ConfigSystem.ConfigExtension)
+        local config = HttpService:JSONDecode(data)
+        for i,v in pairs(config.Settings) do
+            Settings[i] = v
         end
-        return false
+        for i,v in pairs(config.FOVSettings) do
+            FOVSettings[i] = v 
+        end
     end,
     
     DeleteConfig = function(name)
-        local path = ConfigSystem.FolderName .. "/" .. name .. ConfigSystem.ConfigExtension
-        if isfile(path) then
-            delfile(path)
-            return true
-        end
-        return false
+        delfile(ConfigSystem.FolderName .. "/" .. name .. ConfigSystem.ConfigExtension)
     end
 }
 
 ConfigSystem.Init()
 
---// Frame
+--// Window
 
-Library.UnloadCallback = Functions.Exit
-
-local MainFrame = Library:CreateWindow({
-    Name = "Xenon",
-    Theme = [[{"__Designer.Colors.topGradient":"782020","__Designer.Colors.section":"451111","__Designer.Colors.hoveredOptionTop":"451111","__Designer.Colors.hoveredOptionBottom":"2D0B0B","__Designer.Colors.selectedOption":"4B1313","__Designer.Colors.unselectedOption":"391010","__Designer.Background.ImageAssetID":"","__Designer.Colors.unhoveredOptionTop":"391010","__Designer.Colors.unhoveredOptionBottom":"2D0B0B","__Designer.Colors.box":"2D0B0B","__Designer.Colors.bottomGradient":"2D0B0B"}]]
+local Window = Library:CreateWindow({
+    Title = "Xenon",
+    Center = true,
+    AutoShow = true
 })
 
 --// Tabs
 
-local AimbotTab = MainFrame:CreateTab({
-    Name = "Aimbot"
-})
+local Tabs = {
+    Main = Window:AddTab("Aimbot"),
+    FOV = Window:AddTab("FOV")
+}
 
-local FOVTab = MainFrame:CreateTab({
-    Name = "FOV"
-})
+--// Main Tab
 
---// Sections
+local MainBox = Tabs.Main:AddLeftGroupbox("Main")
+local ConfigBox = Tabs.Main:AddRightGroupbox("Config")
 
-local MainSection = AimbotTab:CreateSection({
-    Name = "Main"
-})
-
-local ConfigSection = AimbotTab:CreateSection({
-    Name = "Config"
-})
-
-local FOVMainSection = FOVTab:CreateSection({
-    Name = "Main"
-})
-
-local FOVAppearanceSection = FOVTab:CreateSection({
-    Name = "Appearance"
-})
-
---// Main Section
-
-MainSection:AddToggle({
-    Name = "Enabled",
-    Value = Settings.Enabled,
-    Callback = function(New, Old)
-        Settings.Enabled = New
+MainBox:AddToggle('Enabled', {
+    Text = 'Enabled',
+    Default = Settings.Enabled,
+    Callback = function(Value)
+        Settings.Enabled = Value
     end
-}).Default = Settings.Enabled
+})
 
-MainSection:AddToggle({
-    Name = "Toggle",
-    Value = Settings.Toggle,
-    Callback = function(New, Old)
-        Settings.Toggle = New
+MainBox:AddToggle('Toggle', {
+    Text = 'Toggle',
+    Default = Settings.Toggle,
+    Callback = function(Value)
+        Settings.Toggle = Value
     end
-}).Default = Settings.Toggle
+})
 
-MainSection:AddToggle({
-    Name = "Sticky Aim",
-    Value = Settings.StickyAim,
-    Callback = function(New, Old)
-        Settings.StickyAim = New
+MainBox:AddToggle('StickyAim', {
+    Text = 'Sticky Aim',
+    Default = Settings.StickyAim,
+    Callback = function(Value)
+        Settings.StickyAim = Value
     end
-}).Default = Settings.StickyAim
+})
 
-Settings.LockPart = Parts[1]; MainSection:AddDropdown({
-    Name = "Lock Part",
-    Value = Parts[1],
-    Callback = function(New, Old)
-        Settings.LockPart = New
-    end,
-    List = Parts,
-    Nothing = "Head"
-}).Default = Parts[1]
-
-MainSection:AddTextbox({
-    Name = "Hotkey",
-    Value = Settings.TriggerKey,
-    Callback = function(New, Old)
-        Settings.TriggerKey = New
+MainBox:AddDropdown('LockPart', {
+    Values = Parts,
+    Default = 1,
+    Text = 'Lock Part',
+    Callback = function(Value)
+        Settings.LockPart = Value
     end
-}).Default = Settings.TriggerKey
+})
 
-MainSection:AddSlider({
-    Name = "Sensitivity",
-    Value = Settings.Sensitivity,
-    Callback = function(New, Old)
-        Settings.Sensitivity = New
-    end,
+MainBox:AddInput('Hotkey', {
+    Default = Settings.TriggerKey,
+    Text = 'Hotkey',
+    Callback = function(Value)
+        Settings.TriggerKey = Value
+    end
+})
+
+MainBox:AddSlider('Sensitivity', {
+    Text = 'Sensitivity',
+    Default = Settings.Sensitivity,
     Min = 0,
     Max = 1,
-    Decimals = 2
-}).Default = Settings.Sensitivity
-
-MainSection:AddToggle({
-    Name = "Prediction",
-    Value = Settings.Prediction,
-    Callback = function(New, Old)
-        Settings.Prediction = New
+    Rounding = 2,
+    Callback = function(Value)
+        Settings.Sensitivity = Value
     end
-}).Default = Settings.Prediction
+})
 
-MainSection:AddSlider({
-    Name = "Prediction Amount",
-    Value = Settings.PredictionAmount,
-    Callback = function(New, Old)
-        Settings.PredictionAmount = New
-    end,
+MainBox:AddToggle('Prediction', {
+    Text = 'Prediction',
+    Default = Settings.Prediction,
+    Callback = function(Value)
+        Settings.Prediction = Value
+    end
+})
+
+MainBox:AddSlider('PredictionAmount', {
+    Text = 'Prediction Amount',
+    Default = Settings.PredictionAmount,
     Min = 0,
     Max = 1,
-    Decimals = 2
-}).Default = Settings.PredictionAmount
-
-MainSection:AddToggle({
-    Name = "Team Check",
-    Value = Settings.TeamCheck,
-    Callback = function(New, Old)
-        Settings.TeamCheck = New
+    Rounding = 3,
+    Callback = function(Value)
+        Settings.PredictionAmount = Value
     end
-}).Default = Settings.TeamCheck
+})
 
-MainSection:AddToggle({
-    Name = "Wall Check",
-    Value = Settings.WallCheck,
-    Callback = function(New, Old)
-        Settings.WallCheck = New
+MainBox:AddToggle('TeamCheck', {
+    Text = 'Team Check',
+    Default = Settings.TeamCheck,
+    Callback = function(Value)
+        Settings.TeamCheck = Value
     end
-}).Default = Settings.WallCheck
+})
 
-MainSection:AddToggle({
-    Name = "Alive Check",
-    Value = Settings.AliveCheck,
-    Callback = function(New, Old)
-        Settings.AliveCheck = New
+MainBox:AddToggle('WallCheck', {
+    Text = 'Wall Check',
+    Default = Settings.WallCheck,
+    Callback = function(Value)
+        Settings.WallCheck = Value
     end
-}).Default = Settings.AliveCheck
+})
+
+MainBox:AddToggle('AliveCheck', {
+    Text = 'Alive Check', 
+    Default = Settings.AliveCheck,
+    Callback = function(Value)
+        Settings.AliveCheck = Value
+    end
+})
 
 --// Config Section
 
 local configName = ""
 
-ConfigSection:AddTextbox({
-    Name = "Config Name",
-    Value = "",
-    Callback = function(New)
-        configName = New
+ConfigBox:AddInput('ConfigName', {
+    Default = '',
+    Text = 'Config Name',
+    Callback = function(Value)
+        configName = Value
     end
 })
 
-ConfigSection:AddButton({
-    Name = "Save Config",
-    Callback = function()
-        if configName ~= "" then
-            ConfigSystem.SaveConfig(configName)
-        end
+ConfigBox:AddButton('Save Config', function()
+    if configName ~= "" then
+        ConfigSystem.SaveConfig(configName)
+    end
+end)
+
+ConfigBox:AddButton('Load Config', function()
+    if configName ~= "" then
+        ConfigSystem.LoadConfig(configName)
+    end
+end)
+
+ConfigBox:AddButton('Delete Config', function()
+    if configName ~= "" then
+        ConfigSystem.DeleteConfig(configName)
+    end
+end)
+
+--// FOV Tab
+
+local FOVMainBox = Tabs.FOV:AddLeftGroupbox('Main')
+local FOVAppearanceBox = Tabs.FOV:AddRightGroupbox('Appearance')
+
+FOVMainBox:AddToggle('FOVEnabled', {
+    Text = 'Enabled',
+    Default = FOVSettings.Enabled,
+    Callback = function(Value)
+        FOVSettings.Enabled = Value
     end
 })
 
-ConfigSection:AddButton({
-    Name = "Load Config",
-    Callback = function()
-        if configName ~= "" then
-            ConfigSystem.LoadConfig(configName)
-        end
+FOVMainBox:AddToggle('FOVVisible', {
+    Text = 'Visible',
+    Default = FOVSettings.Visible,
+    Callback = function(Value)
+        FOVSettings.Visible = Value
     end
 })
 
-ConfigSection:AddButton({
-    Name = "Delete Config",
-    Callback = function()
-        if configName ~= "" then
-            ConfigSystem.DeleteConfig(configName)
-        end
-    end
-})
-
---// FOV Main Section
-
-FOVMainSection:AddToggle({
-    Name = "Enabled",
-    Value = FOVSettings.Enabled,
-    Callback = function(New, Old)
-        FOVSettings.Enabled = New
-    end
-}).Default = FOVSettings.Enabled
-
-FOVMainSection:AddToggle({
-    Name = "Visible",
-    Value = FOVSettings.Visible,
-    Callback = function(New, Old)
-        FOVSettings.Visible = New
-    end
-}).Default = FOVSettings.Visible
-
-FOVMainSection:AddSlider({
-    Name = "Amount",
-    Value = FOVSettings.Amount,
-    Callback = function(New, Old)
-        FOVSettings.Amount = New
-    end,
+FOVMainBox:AddSlider('FOVAmount', {
+    Text = 'Amount',
+    Default = FOVSettings.Amount,
     Min = 10,
-    Max = 300
-}).Default = FOVSettings.Amount
-
---// FOV Appearance Section
-
-FOVAppearanceSection:AddToggle({
-    Name = "Filled",
-    Value = FOVSettings.Filled,
-    Callback = function(New, Old)
-        FOVSettings.Filled = New
+    Max = 300,
+    Rounding = 0,
+    Callback = function(Value)
+        FOVSettings.Amount = Value
     end
-}).Default = FOVSettings.Filled
+})
 
-FOVAppearanceSection:AddSlider({
-    Name = "Transparency",
-    Value = FOVSettings.Transparency,
-    Callback = function(New, Old)
-        FOVSettings.Transparency = New
-    end,
+FOVAppearanceBox:AddToggle('FOVFilled', {
+    Text = 'Filled',
+    Default = FOVSettings.Filled,
+    Callback = function(Value)
+        FOVSettings.Filled = Value
+    end
+})
+
+FOVAppearanceBox:AddSlider('FOVTransparency', {
+    Text = 'Transparency',
+    Default = FOVSettings.Transparency,
     Min = 0,
     Max = 1,
-    Decimal = 1
-}).Default = FOVSettings.Transparency
+    Rounding = 1,
+    Callback = function(Value)
+        FOVSettings.Transparency = Value
+    end
+})
 
-FOVAppearanceSection:AddSlider({
-    Name = "Sides",
-    Value = FOVSettings.Sides,
-    Callback = function(New, Old)
-        FOVSettings.Sides = New
-    end,
+FOVAppearanceBox:AddSlider('FOVSides', {
+    Text = 'Sides',
+    Default = FOVSettings.Sides,
     Min = 3,
-    Max = 60
-}).Default = FOVSettings.Sides
+    Max = 60,
+    Rounding = 0,
+    Callback = function(Value)
+        FOVSettings.Sides = Value
+    end
+})
 
-FOVAppearanceSection:AddSlider({
-    Name = "Thickness",
-    Value = FOVSettings.Thickness,
-    Callback = function(New, Old)
-        FOVSettings.Thickness = New
-    end,
+FOVAppearanceBox:AddSlider('FOVThickness', {
+    Text = 'Thickness',
+    Default = FOVSettings.Thickness,
     Min = 1,
-    Max = 50
-}).Default = FOVSettings.Thickness
-
-FOVAppearanceSection:AddColorpicker({
-    Name = "Color",
-    Value = FOVSettings.Color,
-    Callback = function(New, Old)
-        FOVSettings.Color = New
+    Max = 50,
+    Rounding = 0,
+    Callback = function(Value)
+        FOVSettings.Thickness = Value
     end
-}).Default = FOVSettings.Color
+})
 
-FOVAppearanceSection:AddColorpicker({
-    Name = "Locked Color",
-    Value = FOVSettings.LockedColor,
-    Callback = function(New, Old)
-        FOVSettings.LockedColor = New
+FOVAppearanceBox:AddColorPicker('FOVColor', {
+    Default = FOVSettings.Color,
+    Title = 'Color',
+    Callback = function(Value)
+        FOVSettings.Color = Value
     end
-}).Default = FOVSettings.LockedColor
+})
+
+FOVAppearanceBox:AddColorPicker('FOVLockedColor', {
+    Default = FOVSettings.LockedColor,
+    Title = 'Locked Color',
+    Callback = function(Value)
+        FOVSettings.LockedColor = Value
+    end
+})
+
+Library:OnUnload(function()
+    Library.Unloaded = true
+end)
+
+-- Init
+Library:Init()
