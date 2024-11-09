@@ -102,17 +102,20 @@ local function GetClosestPlayer()
                 end
             end
         end
-    elseif Environment.Locked and Environment.Locked.Character and Environment.Locked.Character:FindFirstChild(Environment.Settings.LockPart) then
-        if Environment.Settings.AliveCheck and Environment.Locked.Character:FindFirstChildOfClass("Humanoid").Health <= 0 then
-            CancelLock()
-            return
-        end
-        if Environment.Settings.TeamCheck and Environment.Locked.Team == LocalPlayer.Team then
-            CancelLock()
-            return
-        end
     else
-        CancelLock()
+        local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
+        
+        if Environment.Settings.Prediction then
+            local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
+            Position = Position + (Velocity * Environment.Settings.PredictionAmount)
+        end
+
+        local Vector, OnScreen = Camera:WorldToViewportPoint(Position)
+        local Distance = (Vector2(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2(Vector.X, Vector.Y)).Magnitude
+
+        if Distance > RequiredDistance or not OnScreen then
+            CancelLock()
+        end
     end
 end
 
@@ -154,15 +157,27 @@ local function Load()
 					mousemoverel((Vector.X - UserInputService:GetMouseLocation().X) * Environment.Settings.ThirdPersonSensitivity, (Vector.Y - UserInputService:GetMouseLocation().Y) * Environment.Settings.ThirdPersonSensitivity)
 				else
 					if Environment.Settings.Prediction then
-						local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
 						local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
-						Position = Position + (Velocity * Environment.Settings.PredictionAmount)
-
-						if Environment.Settings.Sensitivity > 0 then
-							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Position)})
-							Animation:Play()
+						local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
+						local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
+						
+						local PredictedVector, OnScreen = Camera:WorldToViewportPoint(PredictedPosition)
+						local Distance = (Vector2(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2(PredictedVector.X, PredictedVector.Y)).Magnitude
+						
+						if OnScreen and Distance <= Environment.FOVSettings.Amount then
+							if Environment.Settings.Sensitivity > 0 then
+								Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
+								Animation:Play()
+							else
+								Camera.CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)
+							end
 						else
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, Position)
+							if Environment.Settings.Sensitivity > 0 then
+								Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Position)})
+								Animation:Play()
+							else
+								Camera.CFrame = CFrame.new(Camera.CFrame.Position, Position)
+							end
 						end
 					else
 						if Environment.Settings.Sensitivity > 0 then
