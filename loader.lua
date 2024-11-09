@@ -112,17 +112,6 @@ Values:AddTextbox({
 	end
 }).Default = Settings.TriggerKey
 
-Values:AddSlider({
-	Name = "Sensitivity",
-	Value = Settings.Sensitivity,
-	Callback = function(New, Old)
-		Settings.Sensitivity = New
-	end,
-	Min = 0,
-	Max = 1,
-	Decimals = 2
-}).Default = Settings.Sensitivity
-
 Values:AddToggle({
 	Name = "Prediction",
 	Value = Settings.Prediction,
@@ -141,6 +130,17 @@ Values:AddSlider({
 	Max = 1,
 	Decimals = 2
 }).Default = Settings.PredictionAmount
+
+Values:AddSlider({
+	Name = "Smoothness",
+	Value = Settings.Smoothness,
+	Callback = function(New, Old)
+		Settings.Smoothness = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.Sensitivity
 
 --// Aimbot / Checks
 
