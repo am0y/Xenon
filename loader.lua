@@ -50,6 +50,14 @@ local Values = AimbotTab:CreateSection({
 	Name = "Values"
 })
 
+local LegitTab = MainFrame:CreateTab({
+	Name = "Legit"
+})
+
+local LegitValues = LegitTab:CreateSection({
+	Name = "Legit Options"
+})
+
 local Checks = AimbotTab:CreateSection({
 	Name = "Checks"
 })
@@ -141,6 +149,58 @@ Values:AddSlider({
 	Max = 1,
 	Decimals = 2
 }).Default = Settings.Sensitivity
+
+LegitValues:AddToggle({
+	Name = "Legit Mode",
+	Value = Settings.LegitMode,
+	Callback = function(New, Old)
+		Settings.LegitMode = New
+	end
+}).Default = Settings.LegitMode
+
+LegitValues:AddSlider({
+	Name = "Aim Smoothness",
+	Value = Settings.Smoothness,
+	Callback = function(New, Old)
+		Settings.Smoothness = New
+	end,
+	Min = 0.1,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.Smoothness
+
+LegitValues:AddSlider({
+	Name = "Random Offset",
+	Value = Settings.RandomAimOffset,
+	Callback = function(New, Old)
+		Settings.RandomAimOffset = New
+	end,
+	Min = 1,
+	Max = 5,
+	Decimals = 1
+}).Default = Settings.RandomAimOffset
+
+LegitValues:AddSlider({
+	Name = "Aim Accuracy",
+	Value = Settings.AimAccuracy,
+	Callback = function(New, Old)
+		Settings.AimAccuracy = New
+	end,
+	Min = 1,
+	Max = 100,
+	Decimals = 0
+}).Default = Settings.AimAccuracy
+
+LegitValues:AddSlider({
+	Name = "Reaction Time",
+	Value = Settings.ReactionTime,
+	Callback = function(New, Old)
+		Settings.ReactionTime = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.ReactionTime
 
 --// Aimbot / Checks
 

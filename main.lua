@@ -42,7 +42,12 @@ Environment.Settings = {
 	LockPart = "Head", -- Body part to lock on
 	Prediction = false,
 	PredictionAmount = 0.165,
-    StickyAim = false
+    StickyAim = false,
+    LegitMode = true, -- Makes aimbot more humanized
+    Smoothness = 0.6, -- How smooth the aimbot moves (0.1 - 1)
+    RandomAimOffset = 2, -- Random offset for more human-like aim (1-5)
+    AimAccuracy = 85, -- Accuracy percentage (1-100)
+    ReactionTime = 0.2 -- Delay before locking onto target (seconds)
 }
 
 Environment.FOVSettings = {
@@ -73,6 +78,18 @@ local function CancelLock()
 	Environment.Locked = nil
 	if Animation then Animation:Cancel() end
 	Environment.FOVCircle.Color = Environment.FOVSettings.Color
+end
+
+local function AddHumanizedNoise(position)
+    if Environment.Settings.LegitMode then
+        local offset = Vector3.new(
+            math.random(-Environment.Settings.RandomAimOffset, Environment.Settings.RandomAimOffset),
+            math.random(-Environment.Settings.RandomAimOffset, Environment.Settings.RandomAimOffset),
+            math.random(-Environment.Settings.RandomAimOffset, Environment.Settings.RandomAimOffset)
+        )
+        return position + (offset * (1 - Environment.Settings.AimAccuracy/100))
+    end
+    return position
 end
 
 local function GetClosestPlayer()
@@ -173,6 +190,17 @@ local function Load()
 						local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
 						local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
 						local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
+						
+						if Environment.Settings.LegitMode then
+							PredictedPosition = AddHumanizedNoise(PredictedPosition)
+							Environment.Settings.Sensitivity = Environment.Settings.Smoothness
+							if not Environment.AimStartTime then
+								Environment.AimStartTime = tick()
+							end
+							if tick() - Environment.AimStartTime < Environment.Settings.ReactionTime then
+								return
+							end
+						end
 						
 						if Environment.Settings.Sensitivity > 0 then
 							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
