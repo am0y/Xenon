@@ -46,6 +46,7 @@ Environment.Settings = {
     LegitMode = false,
     HumanAim = {
         enabled = false,
+        threshold = 45,           -- Maximum angle difference to activate aim (degrees)
         overAimChance = 0.4,      -- Chance to slightly overaim
         underAimChance = 0.3,     -- Chance to slightly underaim
         microAdjustSpeed = 0.12,  -- Speed of micro-adjustments
@@ -177,6 +178,18 @@ local function Load()
 			if Environment.Locked then
 				if Environment.Settings.LegitMode and Environment.Settings.HumanAim.enabled then
 					local currentTime = tick()
+					
+					-- Calculate angle between current aim and target
+					local targetPart = Environment.Locked.Character[Environment.Settings.LockPart]
+					local targetPos = targetPart.Position
+					local currentAim = Camera.CFrame.LookVector
+					local targetAim = (targetPos - Camera.CFrame.Position).Unit
+					local aimAngle = math.acos(currentAim:Dot(targetAim)) * (180/math.pi)
+					
+					-- Check if target is within threshold
+					if aimAngle > Environment.Settings.HumanAim.threshold then
+						return
+					end
 					local targetPart = Environment.Locked.Character[Environment.Settings.LockPart]
 					local targetPos = targetPart.Position
 					
