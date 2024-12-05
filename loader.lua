@@ -147,7 +147,7 @@ Values:AddToggle({
 	Value = Settings.LegitMode,
 	Callback = function(New, Old)
 		Settings.LegitMode = New
-        Settings.LegitSettings.enabled = New
+        Settings.HumanAim.enabled = New
         if New then
             Settings.ThirdPerson = false
             Settings.Sensitivity = 0

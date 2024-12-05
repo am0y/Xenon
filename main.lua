@@ -44,14 +44,16 @@ Environment.Settings = {
 	PredictionAmount = 0.165,
     StickyAim = false,
     LegitMode = false,
-    LegitSettings = {
+    HumanAim = {
         enabled = false,
-        smoothing = 0.35, -- Camera smoothing
-        acceleration = 0.2, -- Gradual speed increase
-        deceleration = 0.15, -- Gradual speed decrease
-        reactionTime = 0.15, -- Human reaction simulation
-        targetSwitchDelay = 0.2, -- Delay when switching targets
-        precisionCurve = 0.8 -- Accuracy curve based on distance
+        overAimChance = 0.4,      -- Chance to slightly overaim
+        underAimChance = 0.3,     -- Chance to slightly underaim
+        microAdjustSpeed = 0.12,  -- Speed of micro-adjustments
+        maxOvershoot = 0.3,       -- Maximum overshoot amount
+        correctionDelay = 0.08,   -- Delay before correcting aim
+        shakiness = 0.06,         -- Natural hand shakiness
+        flickSpeed = 0.25,        -- Speed of initial flick
+        targetSwitchDelay = 0.18  -- Delay when switching targets
     }
 }
 
@@ -173,66 +175,90 @@ local function Load()
 			GetClosestPlayer()
 
 			if Environment.Locked then
-				if Environment.Settings.LegitMode and Environment.Settings.LegitSettings.enabled then
+				if Environment.Settings.LegitMode and Environment.Settings.HumanAim.enabled then
 					local currentTime = tick()
-					
-					-- Initialize aim state if needed
-					if not Environment.AimState then
-						Environment.AimState = {
-							startTime = currentTime,
-							lastUpdate = currentTime,
-							initialPos = Camera.CFrame,
-							acceleration = 0,
-							lastTarget = nil
-						}
-					end
-					
 					local targetPart = Environment.Locked.Character[Environment.Settings.LockPart]
 					local targetPos = targetPart.Position
 					
-					-- Target switching logic
-					if Environment.AimState.lastTarget ~= Environment.Locked then
-						Environment.AimState.startTime = currentTime
-						Environment.AimState.acceleration = 0
-						Environment.AimState.lastTarget = Environment.Locked
+					-- Initialize or reset aim state
+					if not Environment.AimState or Environment.AimState.lastTarget ~= Environment.Locked then
+						Environment.AimState = {
+							startTime = currentTime,
+							lastUpdate = currentTime,
+							lastTarget = Environment.Locked,
+							initialAngle = Camera.CFrame.LookVector,
+							overshot = math.random() < Environment.Settings.HumanAim.overAimChance,
+							undershot = math.random() < Environment.Settings.HumanAim.underAimChance,
+							adjustPhase = 0,
+							lastAdjustTime = currentTime,
+							flickStarted = false,
+							microAdjusting = false
+						}
 					end
 					
-					-- Calculate aim timing
 					local aimDelta = currentTime - Environment.AimState.startTime
-					local reactionDelay = Environment.Settings.LegitSettings.reactionTime
 					
-					if aimDelta < reactionDelay then
-						return -- Simulate human reaction time
-					end
-					
-					-- Distance-based precision
-					local distance = (targetPos - Camera.CFrame.Position).Magnitude
-					local precisionMultiplier = math.clamp(1 - (distance / 100) * Environment.Settings.LegitSettings.precisionCurve, 0.3, 1)
-					
-					-- Velocity prediction with human error
-					if Environment.Settings.Prediction then
-						local predictMult = math.clamp(Environment.Settings.PredictionAmount * precisionMultiplier, 0, 1)
-						targetPos = targetPos + (targetPart.Velocity * predictMult)
-					end
-					
-					-- Acceleration curve
-					local accelerationTime = math.clamp(aimDelta - reactionDelay, 0, 1)
-					Environment.AimState.acceleration = math.min(
-						Environment.AimState.acceleration + Environment.Settings.LegitSettings.acceleration * accelerationTime,
-						1
+					-- Calculate natural hand movement
+					local handShake = Vector3.new(
+						math.sin(currentTime * 10) * Environment.Settings.HumanAim.shakiness,
+						math.cos(currentTime * 8) * Environment.Settings.HumanAim.shakiness,
+						math.sin(currentTime * 12) * Environment.Settings.HumanAim.shakiness
 					)
 					
-					-- Calculate camera movement
-					local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-					local smoothness = Environment.Settings.LegitSettings.smoothing / precisionMultiplier
+					-- Add human error to prediction
+					if Environment.Settings.Prediction then
+						local errorMult = math.random(85, 115) / 100
+						targetPos = targetPos + (targetPart.Velocity * Environment.Settings.PredictionAmount * errorMult)
+					end
 					
-					-- Apply smooth, natural camera movement
+					-- Initial flick phase
+					if not Environment.AimState.flickStarted and aimDelta > Environment.Settings.HumanAim.targetSwitchDelay then
+						Environment.AimState.flickStarted = true
+						Environment.AimState.flickEndTime = currentTime + Environment.Settings.HumanAim.flickSpeed
+					end
+					
+					-- Calculate aim position with human characteristics
+					local finalPos = targetPos
+					if Environment.AimState.flickStarted then
+						local flickProgress = math.min((currentTime - Environment.AimState.startTime) / Environment.Settings.HumanAim.flickSpeed, 1)
+						
+						-- Add overshooting/undershooting
+						if Environment.AimState.overshot then
+							local overshootAmount = Vector3.new(
+								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot,
+								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot,
+								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot
+							)
+							finalPos = finalPos + overshootAmount
+						elseif Environment.AimState.undershot then
+							local undershootAmount = Vector3.new(
+								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot,
+								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot,
+								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot
+							)
+							finalPos = finalPos - undershootAmount
+						end
+						
+						-- Micro-adjustment phase
+						if flickProgress >= 1 and currentTime - Environment.AimState.lastAdjustTime > Environment.Settings.HumanAim.correctionDelay then
+							Environment.AimState.microAdjusting = true
+							local adjustmentProgress = math.sin(Environment.AimState.adjustPhase)
+							finalPos = finalPos + (handShake * adjustmentProgress)
+							Environment.AimState.adjustPhase = Environment.AimState.adjustPhase + Environment.Settings.HumanAim.microAdjustSpeed
+						end
+					end
+					
+					-- Apply final camera movement
+					local targetCFrame = CFrame.new(Camera.CFrame.Position, finalPos)
+					local aimSpeed = Environment.AimState.microAdjusting and 
+						Environment.Settings.HumanAim.microAdjustSpeed or 
+						Environment.Settings.HumanAim.flickSpeed
+						
 					Camera.CFrame = Camera.CFrame:Lerp(
 						targetCFrame,
-						Environment.AimState.acceleration * smoothness
+						math.min(aimSpeed * math.random(90, 110) / 100, 1)
 					)
 					
-					-- Update state
 					Environment.AimState.lastUpdate = currentTime
 					
 				elseif Environment.Settings.ThirdPerson then
