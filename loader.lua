@@ -142,6 +142,36 @@ Values:AddSlider({
 	Decimals = 2
 }).Default = Settings.Sensitivity
 
+Values:AddToggle({
+	Name = "Legit Mode",
+	Value = Settings.Legit,
+	Callback = function(New, Old)
+		Settings.Legit = New
+	end
+}).Default = Settings.Legit
+
+Values:AddSlider({
+	Name = "Legit Randomization",
+	Value = Settings.LegitRandomization,
+	Callback = function(New, Old)
+		Settings.LegitRandomization = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.LegitRandomization
+
+Values:AddSlider({
+	Name = "Legit Speed",
+	Value = Settings.LegitSpeed,
+	Callback = function(New, Old)
+		Settings.LegitSpeed = New
+	end,
+	Min = 0.1,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.LegitSpeed
+
 --// Aimbot / Checks
 
 Checks:AddToggle({

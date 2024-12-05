@@ -42,7 +42,10 @@ Environment.Settings = {
 	LockPart = "Head", -- Body part to lock on
 	Prediction = false,
 	PredictionAmount = 0.165,
-    StickyAim = false
+    StickyAim = false,
+    Legit = false, -- Makes the aimbot look more realistic
+    LegitRandomization = 0.3, -- Random aim offset (0-1)
+    LegitSpeed = 0.2 -- Speed of aim adjustment (seconds)
 }
 
 Environment.FOVSettings = {
@@ -174,12 +177,27 @@ local function Load()
 						local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
 						local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
 						
-						if Environment.Settings.Sensitivity > 0 then
-							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
-							Animation:Play()
-						else
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)
-						end
+						if Environment.Settings.Legit then
+                            local randomOffset = Vector3.new(
+                                math.random(-100, 100) / 100 * Environment.Settings.LegitRandomization,
+                                math.random(-100, 100) / 100 * Environment.Settings.LegitRandomization,
+                                math.random(-100, 100) / 100 * Environment.Settings.LegitRandomization
+                            )
+                            local targetPos = PredictedPosition + randomOffset
+                            Animation = TweenService:Create(Camera, TweenInfo.new(
+                                Environment.Settings.LegitSpeed,
+                                Enum.EasingStyle.Sine,
+                                Enum.EasingDirection.Out
+                            ), {CFrame = CFrame.new(Camera.CFrame.Position, targetPos)})
+                            Animation:Play()
+                        else
+                            if Environment.Settings.Sensitivity > 0 then
+                                Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
+                                Animation:Play()
+                            else
+                                Camera.CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)
+                            end
+                        end
 					else
 						if Environment.Settings.Sensitivity > 0 then
 							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)})
@@ -285,7 +303,10 @@ function Environment.Functions:ResetSettings()
 		LockPart = "Head",
 		Prediction = false,
 		PredictionAmount = 0.165,
-        StickyAim = false
+        StickyAim = false,
+        Legit = false,
+        LegitRandomization = 0.3,
+        LegitSpeed = 0.2
 	}
 
 	Environment.FOVSettings = {
