@@ -131,35 +131,18 @@ Values:AddSlider({
 	Decimals = 2
 }).Default = Settings.PredictionAmount
 
-Values:AddSlider({
-	Name = "Smoothness",
-	Value = Settings.Sensitivity,
-	Callback = function(New, Old)
-		Settings.Sensitivity = New
-	end,
-	Min = 0,
-	Max = 1,
-	Decimals = 2
-}).Default = Settings.Sensitivity
-
 Values:AddToggle({
-	Name = "Legit Mode",
+	Name = "Legit",
 	Value = Settings.LegitMode,
 	Callback = function(New, Old)
 		Settings.LegitMode = New
+        Settings.MicroAdjustments.enabled = New
+        if New then
+            Settings.ThirdPerson = false
+            Settings.Sensitivity = 0
+        end
 	end
 }).Default = Settings.LegitMode
-
-Values:AddSlider({
-	Name = "Legit Smoothness",
-	Value = Settings.Smoothness,
-	Callback = function(New, Old)
-		Settings.Smoothness = New
-	end,
-	Min = 0.1,
-	Max = 1,
-	Decimals = 2
-}).Default = Settings.Smoothness
 
 --// Aimbot / Checks
 

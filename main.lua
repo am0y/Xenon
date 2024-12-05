@@ -33,21 +33,22 @@ Environment.Settings = {
 	Enabled = true,
 	TeamCheck = false,
 	AliveCheck = true,
-	WallCheck = false, -- Laggy
-	Sensitivity = 0, -- Animation length (in seconds) before fully locking onto target
-	ThirdPerson = false, -- Uses mousemoverel instead of CFrame to support locking in third person (could be choppy)
-	ThirdPersonSensitivity = 3, -- Boundary: 0.1 - 5
+	WallCheck = false,
+	Sensitivity = 0,
+	ThirdPerson = false,
+	ThirdPersonSensitivity = 3,
 	TriggerKey = "MouseButton2",
 	Toggle = false,
-	LockPart = "Head", -- Body part to lock on
+	LockPart = "Head",
 	Prediction = false,
 	PredictionAmount = 0.165,
     StickyAim = false,
-    LegitMode = true, -- Makes aimbot more humanized
-    Smoothness = 0.6, -- How smooth the aimbot moves (0.1 - 1)
-    RandomAimOffset = 2, -- Random offset for more human-like aim (1-5)
-    AimAccuracy = 85, -- Accuracy percentage (1-100)
-    ReactionTime = 0.2 -- Delay before locking onto target (seconds)
+    LegitMode = false, -- Camera-based human-like aim
+    MicroAdjustments = {
+        enabled = false,
+        amount = 0.15,
+        speed = 0.08
+    }
 }
 
 Environment.FOVSettings = {
@@ -78,18 +79,6 @@ local function CancelLock()
 	Environment.Locked = nil
 	if Animation then Animation:Cancel() end
 	Environment.FOVCircle.Color = Environment.FOVSettings.Color
-end
-
-local function AddHumanizedNoise(position)
-    if Environment.Settings.LegitMode then
-        local offset = Vector3.new(
-            math.random(-Environment.Settings.RandomAimOffset, Environment.Settings.RandomAimOffset),
-            math.random(-Environment.Settings.RandomAimOffset, Environment.Settings.RandomAimOffset),
-            math.random(-Environment.Settings.RandomAimOffset, Environment.Settings.RandomAimOffset)
-        )
-        return position + (offset * (1 - Environment.Settings.AimAccuracy/100))
-    end
-    return position
 end
 
 local function GetClosestPlayer()
@@ -180,7 +169,36 @@ local function Load()
 			GetClosestPlayer()
 
 			if Environment.Locked then
-				if Environment.Settings.ThirdPerson then
+				if Environment.Settings.LegitMode then
+					local targetPos = Environment.Locked.Character[Environment.Settings.LockPart].Position
+					local targetVel = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
+					
+					-- Add natural micro-adjustments
+					local microX = math.sin(tick() * 10) * Environment.Settings.MicroAdjustments.amount
+					local microY = math.cos(tick() * 8) * Environment.Settings.MicroAdjustments.amount
+					local microZ = math.sin(tick() * 12) * Environment.Settings.MicroAdjustments.amount
+					
+					-- Simulate human reaction delay and imperfect tracking
+					local randomOffset = Vector3.new(
+						math.random(-10, 10) / 100,
+						math.random(-10, 10) / 100,
+						math.random(-10, 10) / 100
+					)
+					
+					-- Calculate final position with human-like imperfections
+					local finalPos = targetPos + targetVel * (Environment.Settings.PredictionAmount * 0.7) + 
+						Vector3.new(microX, microY, microZ) + randomOffset
+						
+					-- Camera-based smooth aim
+					local currentCam = Camera.CFrame
+					local targetCam = CFrame.new(currentCam.Position, finalPos)
+					
+					-- Smooth camera movement with variable speed
+					local delta = math.random(7, 12) / 10
+					Camera.CFrame = currentCam:Lerp(targetCam, Environment.Settings.MicroAdjustments.speed * delta)
+					
+					Environment.Settings.MicroAdjustments.enabled = true
+				elseif Environment.Settings.ThirdPerson then
 					Environment.Settings.ThirdPersonSensitivity = mathclamp(Environment.Settings.ThirdPersonSensitivity, 0.1, 5)
 
 					local Vector = Camera:WorldToViewportPoint(Environment.Locked.Character[Environment.Settings.LockPart].Position)
@@ -190,17 +208,6 @@ local function Load()
 						local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
 						local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
 						local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
-						
-						if Environment.Settings.LegitMode then
-							PredictedPosition = AddHumanizedNoise(PredictedPosition)
-							Environment.Settings.Sensitivity = Environment.Settings.Smoothness
-							if not Environment.AimStartTime then
-								Environment.AimStartTime = tick()
-							end
-							if tick() - Environment.AimStartTime < Environment.Settings.ReactionTime then
-								return
-							end
-						end
 						
 						if Environment.Settings.Sensitivity > 0 then
 							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
