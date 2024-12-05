@@ -155,17 +155,6 @@ Values:AddToggle({
 	end
 }).Default = Settings.LegitMode
 
-Values:AddSlider({
-	Name = "Legit Threshold",
-	Value = Settings.HumanAim.threshold,
-	Callback = function(New, Old)
-		Settings.HumanAim.threshold = New
-	end,
-	Min = 0,
-	Max = 180,
-	Decimals = 0
-}).Default = 45
-
 --// Aimbot / Checks
 
 Checks:AddToggle({
