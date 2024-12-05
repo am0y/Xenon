@@ -172,6 +172,90 @@ Values:AddSlider({
 	Decimals = 2
 }).Default = Settings.LegitSpeed
 
+-- Human Behavior Section
+local HumanBehavior = AimbotTab:CreateSection({
+	Name = "Human Behavior"
+})Behavior:AddToggle({
+	Name = "Micro Adjustments",
+	Value = Settings.MicroAdjustments,
+	Callback = function(New, Old)
+		Settings.MicroAdjustments = New
+	end
+}).Default = Settings.MicroAdjustments
+
+HumanBehavior:AddSlider({
+	Name = "Overflick Chance",
+	Value = Settings.OverflickChance,
+	Callback = function(New, Old)
+		Settings.OverflickChance = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.OverflickChance
+
+HumanBehavior:AddSlider({
+	Name = "Reaction Time Min",
+	Value = Settings.ReactionTimeMin,
+	Callback = function(New, Old)
+		Settings.ReactionTimeMin = New
+	end,
+	Min = 0.1,
+	Max = 0.5,
+	Decimals = 2
+}).Default = Settings.ReactionTimeMin
+
+HumanBehavior:AddSlider({
+	Name = "Reaction Time Max",
+	Value = Settings.ReactionTimeMax,
+	Callback = function(New, Old)
+		Settings.ReactionTimeMax = New
+	end,
+	Min = 0.1,
+	Max = 0.5,
+	Decimals = 2
+}).Default = Settings.ReactionTimeMax
+
+HumanBehavior:AddDropdown({
+	Name = "Aim Curve",
+	Value = Settings.AimCurve,
+	Callback = function(New, Old)
+		Settings.AimCurve = New
+	end,
+	List = {"Linear", "Exponential", "Logarithmic"},
+	Nothing = "Exponential"
+}).Default = Settings.AimCurve
+
+HumanBehavior:AddSlider({
+	Name = "Hand Shake",
+	Value = Settings.ShakeAmount,
+	Callback = function(New, Old)
+		Settings.ShakeAmount = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.ShakeAmount
+
+HumanBehavior:AddSlider({
+	Name = "Fatigue Factor",
+	Value = Settings.FatigueFactor,
+	Callback = function(New, Old)
+		Settings.FatigueFactor = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.FatigueFactor
+
+HumanBehavior:AddToggle({
+	Name = "Mouse Acceleration",
+	Value = Settings.MouseAcceleration,
+	Callback = function(New, Old)
+		Settings.MouseAcceleration = New
+	end
+}).Default = Settings.MouseAcceleration
+
 --// Aimbot / Checks
 
 Checks:AddToggle({
