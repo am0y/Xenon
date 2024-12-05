@@ -1,7 +1,9 @@
 --// Cache
 
 local select = select
-local pcall, getgenv, next, Vector2, mathclamp, type, mousemoverel = select(1, pcall, getgenv, next, Vector2.new, math.clamp, type, mousemoverel or (Input and Input.MouseMove))
+local pcall, getgenv, next, mathclamp, type, mousemoverel = select(1, pcall, getgenv, next, math.clamp, type, mousemoverel or (Input and Input.MouseMove))
+local Vector2 = Vector2.new
+local Vector3 = Vector3.new
 
 --// Preventing Multiple Processes
 
@@ -106,19 +108,20 @@ local AimState = {
     lastAimTime = 0,
     fatigue = 0,
     microAdjustTimer = 0,
-    lastPosition = Vector3.new(),
+    lastPosition = Vector3(0, 0, 0),
     velocityBuffer = {},
     reactionDelay = 0,
     isRecovering = false,
-    lastMouseDelta = Vector2.new()
+    lastMouseDelta = Vector2(0, 0),
+    lastTarget = nil
 }
 
 local function calculateHumanError()
-    local error = Vector3.new()
+    local error = Vector3(0, 0, 0)
     
     -- Base shake
     if Environment.Settings.ShakeAmount > 0 then
-        error = error + Vector3.new(
+        error = error + Vector3(
             math.sin(tick() * 10) * Environment.Settings.ShakeAmount,
             math.cos(tick() * 8) * Environment.Settings.ShakeAmount,
             math.sin(tick() * 12) * Environment.Settings.ShakeAmount
@@ -135,7 +138,7 @@ local function calculateHumanError()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local velocity = LocalPlayer.Character.HumanoidRootPart.Velocity
         local speedFactor = velocity.Magnitude / 50
-        error = error + (Vector3.new(math.random(), math.random(), math.random()) * speedFactor * Environment.Settings.AccuracyVariation)
+        error = error + (Vector3(math.random(), math.random(), math.random()) * speedFactor * Environment.Settings.AccuracyVariation)
     end
     
     return error
@@ -175,7 +178,7 @@ local function simulateHumanAiming(current, target)
     
     -- Micro adjustments
     if Environment.Settings.MicroAdjustments then
-        local microAdjust = Vector3.new(
+        local microAdjust = Vector3(
             math.sin(tick() * 15) * 0.02,
             math.cos(tick() * 12) * 0.02,
             math.sin(tick() * 18) * 0.02
