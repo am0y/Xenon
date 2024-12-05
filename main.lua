@@ -43,11 +43,15 @@ Environment.Settings = {
 	Prediction = false,
 	PredictionAmount = 0.165,
     StickyAim = false,
-    LegitMode = false, -- Camera-based human-like aim
-    MicroAdjustments = {
+    LegitMode = false,
+    LegitSettings = {
         enabled = false,
-        amount = 0.15,
-        speed = 0.08
+        smoothing = 0.35, -- Camera smoothing
+        acceleration = 0.2, -- Gradual speed increase
+        deceleration = 0.15, -- Gradual speed decrease
+        reactionTime = 0.15, -- Human reaction simulation
+        targetSwitchDelay = 0.2, -- Delay when switching targets
+        precisionCurve = 0.8 -- Accuracy curve based on distance
     }
 }
 
@@ -169,35 +173,68 @@ local function Load()
 			GetClosestPlayer()
 
 			if Environment.Locked then
-				if Environment.Settings.LegitMode then
-					local targetPos = Environment.Locked.Character[Environment.Settings.LockPart].Position
-					local targetVel = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
+				if Environment.Settings.LegitMode and Environment.Settings.LegitSettings.enabled then
+					local currentTime = tick()
 					
-					-- Add natural micro-adjustments
-					local microX = math.sin(tick() * 10) * Environment.Settings.MicroAdjustments.amount
-					local microY = math.cos(tick() * 8) * Environment.Settings.MicroAdjustments.amount
-					local microZ = math.sin(tick() * 12) * Environment.Settings.MicroAdjustments.amount
+					-- Initialize aim state if needed
+					if not Environment.AimState then
+						Environment.AimState = {
+							startTime = currentTime,
+							lastUpdate = currentTime,
+							initialPos = Camera.CFrame,
+							acceleration = 0,
+							lastTarget = nil
+						}
+					end
 					
-					-- Simulate human reaction delay and imperfect tracking
-					local randomOffset = Vector3.new(
-						math.random(-10, 10) / 100,
-						math.random(-10, 10) / 100,
-						math.random(-10, 10) / 100
+					local targetPart = Environment.Locked.Character[Environment.Settings.LockPart]
+					local targetPos = targetPart.Position
+					
+					-- Target switching logic
+					if Environment.AimState.lastTarget ~= Environment.Locked then
+						Environment.AimState.startTime = currentTime
+						Environment.AimState.acceleration = 0
+						Environment.AimState.lastTarget = Environment.Locked
+					end
+					
+					-- Calculate aim timing
+					local aimDelta = currentTime - Environment.AimState.startTime
+					local reactionDelay = Environment.Settings.LegitSettings.reactionTime
+					
+					if aimDelta < reactionDelay then
+						return -- Simulate human reaction time
+					end
+					
+					-- Distance-based precision
+					local distance = (targetPos - Camera.CFrame.Position).Magnitude
+					local precisionMultiplier = math.clamp(1 - (distance / 100) * Environment.Settings.LegitSettings.precisionCurve, 0.3, 1)
+					
+					-- Velocity prediction with human error
+					if Environment.Settings.Prediction then
+						local predictMult = math.clamp(Environment.Settings.PredictionAmount * precisionMultiplier, 0, 1)
+						targetPos = targetPos + (targetPart.Velocity * predictMult)
+					end
+					
+					-- Acceleration curve
+					local accelerationTime = math.clamp(aimDelta - reactionDelay, 0, 1)
+					Environment.AimState.acceleration = math.min(
+						Environment.AimState.acceleration + Environment.Settings.LegitSettings.acceleration * accelerationTime,
+						1
 					)
 					
-					-- Calculate final position with human-like imperfections
-					local finalPos = targetPos + targetVel * (Environment.Settings.PredictionAmount * 0.7) + 
-						Vector3.new(microX, microY, microZ) + randomOffset
-						
-					-- Camera-based smooth aim
-					local currentCam = Camera.CFrame
-					local targetCam = CFrame.new(currentCam.Position, finalPos)
+					-- Calculate camera movement
+					local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+					local smoothness = Environment.Settings.LegitSettings.smoothing / precisionMultiplier
 					
-					-- Smooth camera movement with variable speed
-					local delta = math.random(7, 12) / 10
-					Camera.CFrame = currentCam:Lerp(targetCam, Environment.Settings.MicroAdjustments.speed * delta)
+					-- Apply smooth, natural camera movement
+					Camera.CFrame = Camera.CFrame:Lerp(
+						targetCFrame,
+						Environment.AimState.acceleration * smoothness
+					)
 					
-					Environment.Settings.MicroAdjustments.enabled = true
+					-- Update state
+					Environment.AimState.lastUpdate = currentTime
+					
 				elseif Environment.Settings.ThirdPerson then
 					Environment.Settings.ThirdPersonSensitivity = mathclamp(Environment.Settings.ThirdPersonSensitivity, 0.1, 5)
 
