@@ -142,19 +142,6 @@ Values:AddSlider({
 	Decimals = 2
 }).Default = Settings.Sensitivity
 
-Values:AddToggle({
-	Name = "Legit",
-	Value = Settings.LegitMode,
-	Callback = function(New, Old)
-		Settings.LegitMode = New
-        Settings.HumanAim.enabled = New
-        if New then
-            Settings.ThirdPerson = false
-            Settings.Sensitivity = 0
-        end
-	end
-}).Default = Settings.LegitMode
-
 --// Aimbot / Checks
 
 Checks:AddToggle({
