@@ -175,18 +175,31 @@ local function Load()
 			GetClosestPlayer()
 
 			if Environment.Locked then
+				local targetPart = Environment.Locked.Character[Environment.Settings.LockPart]
+				local targetPos = targetPart.Position
+
+				-- Predict target position
+				if Environment.Settings.Prediction then
+					local velocity = targetPart.Velocity
+					targetPos = targetPos + (velocity * Environment.Settings.PredictionAmount)
+				end
+
+				-- Calculate target CFrame and angle difference
+				local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+				local _, _, _, x1, y1, z1, x2, y2, z2, x3, y3, z3 = Camera.CFrame:components()
+				local currentCFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + Vector3.new(x2, y2, z2))
+				local angle = math.acos(currentCFrame.LookVector:Dot((targetCFrame.Position - currentCFrame.Position).Unit))
+
 				if Environment.Settings.LegitMode and Environment.Settings.HumanAim.enabled then
 					local currentTime = tick()
-					local targetPart = Environment.Locked.Character[Environment.Settings.LockPart]
-					local targetPos = targetPart.Position
-					
+
 					-- Initialize or reset aim state
 					if not Environment.AimState or Environment.AimState.lastTarget ~= Environment.Locked then
 						Environment.AimState = {
 							startTime = currentTime,
 							lastUpdate = currentTime,
 							lastTarget = Environment.Locked,
-							initialAngle = Camera.CFrame.LookVector,
+							initialAngle = angle,
 							overshot = math.random() < Environment.Settings.HumanAim.overAimChance,
 							undershot = math.random() < Environment.Settings.HumanAim.underAimChance,
 							adjustPhase = 0,
@@ -195,33 +208,26 @@ local function Load()
 							microAdjusting = false
 						}
 					end
-					
+
 					local aimDelta = currentTime - Environment.AimState.startTime
-					
+
 					-- Calculate natural hand movement
 					local handShake = Vector3.new(
 						math.sin(currentTime * 10) * Environment.Settings.HumanAim.shakiness,
 						math.cos(currentTime * 8) * Environment.Settings.HumanAim.shakiness,
 						math.sin(currentTime * 12) * Environment.Settings.HumanAim.shakiness
 					)
-					
-					-- Add human error to prediction
-					if Environment.Settings.Prediction then
-						local errorMult = math.random(85, 115) / 100
-						targetPos = targetPos + (targetPart.Velocity * Environment.Settings.PredictionAmount * errorMult)
-					end
-					
+
 					-- Initial flick phase
 					if not Environment.AimState.flickStarted and aimDelta > Environment.Settings.HumanAim.targetSwitchDelay then
 						Environment.AimState.flickStarted = true
 						Environment.AimState.flickEndTime = currentTime + Environment.Settings.HumanAim.flickSpeed
 					end
-					
+
 					-- Calculate aim position with human characteristics
-					local finalPos = targetPos
 					if Environment.AimState.flickStarted then
 						local flickProgress = math.min((currentTime - Environment.AimState.startTime) / Environment.Settings.HumanAim.flickSpeed, 1)
-						
+
 						-- Add overshooting/undershooting
 						if Environment.AimState.overshot then
 							local overshootAmount = Vector3.new(
@@ -229,62 +235,50 @@ local function Load()
 								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot,
 								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot
 							)
-							finalPos = finalPos + overshootAmount
+							targetPos = targetPos + overshootAmount
 						elseif Environment.AimState.undershot then
 							local undershootAmount = Vector3.new(
 								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot,
 								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot,
 								math.random(-10, 10) / 10 * Environment.Settings.HumanAim.maxOvershoot
 							)
-							finalPos = finalPos - undershootAmount
+							targetPos = targetPos - undershootAmount
 						end
-						
+
 						-- Micro-adjustment phase
 						if flickProgress >= 1 and currentTime - Environment.AimState.lastAdjustTime > Environment.Settings.HumanAim.correctionDelay then
 							Environment.AimState.microAdjusting = true
 							local adjustmentProgress = math.sin(Environment.AimState.adjustPhase)
-							finalPos = finalPos + (handShake * adjustmentProgress)
+							targetPos = targetPos + (handShake * adjustmentProgress)
 							Environment.AimState.adjustPhase = Environment.AimState.adjustPhase + Environment.Settings.HumanAim.microAdjustSpeed
 						end
 					end
 					
-					-- Apply final camera movement
-					local targetCFrame = CFrame.new(Camera.CFrame.Position, finalPos)
-					local aimSpeed = Environment.AimState.microAdjusting and 
-						Environment.Settings.HumanAim.microAdjustSpeed or 
-						Environment.Settings.HumanAim.flickSpeed
-						
-					Camera.CFrame = Camera.CFrame:Lerp(
-						targetCFrame,
-						math.min(aimSpeed * math.random(90, 110) / 100, 1)
-					)
-					
-					Environment.AimState.lastUpdate = currentTime
-					
-				elseif Environment.Settings.ThirdPerson then
-					Environment.Settings.ThirdPersonSensitivity = mathclamp(Environment.Settings.ThirdPersonSensitivity, 0.1, 5)
+					targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
 
-					local Vector = Camera:WorldToViewportPoint(Environment.Locked.Character[Environment.Settings.LockPart].Position)
-					mousemoverel((Vector.X - UserInputService:GetMouseLocation().X) * Environment.Settings.ThirdPersonSensitivity, (Vector.Y - UserInputService:GetMouseLocation().Y) * Environment.Settings.ThirdPersonSensitivity)
+					-- Apply smoothing
+					local t = Environment.Settings.Sensitivity * (Environment.AimState.initialAngle / angle)
+					t = math.clamp(t, 0, 1)
+					local smoothedCFrame = currentCFrame:Lerp(targetCFrame, t)
+
+					-- Apply final camera movement
+					Camera.CFrame = smoothedCFrame
+					Environment.AimState.lastUpdate = currentTime
+
+				elseif Environment.Settings.ThirdPerson then
+					-- Third-person aiming logic (unchanged)
+					Environment.Settings.ThirdPersonSensitivity = math.clamp(Environment.Settings.ThirdPersonSensitivity, 0.1, 5)
+					local vector = Camera:WorldToViewportPoint(targetPos)
+					mousemoverel((vector.X - UserInputService:GetMouseLocation().X) * Environment.Settings.ThirdPersonSensitivity, (vector.Y - UserInputService:GetMouseLocation().Y) * Environment.Settings.ThirdPersonSensitivity)
 				else
-					if Environment.Settings.Prediction then
-						local Position = Environment.Locked.Character[Environment.Settings.LockPart].Position
-						local Velocity = Environment.Locked.Character[Environment.Settings.LockPart].Velocity
-						local PredictedPosition = Position + (Velocity * Environment.Settings.PredictionAmount)
-						
-						if Environment.Settings.Sensitivity > 0 then
-							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)})
-							Animation:Play()
-						else
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, PredictedPosition)
-						end
+					-- First-person aiming with sensitivity
+					if Environment.Settings.Sensitivity > 0 then
+						local t = Environment.Settings.Sensitivity * (Environment.AimState.initialAngle / angle)
+						t = math.clamp(t, 0, 1)
+						local smoothedCFrame = currentCFrame:Lerp(targetCFrame, t)
+						Camera.CFrame = smoothedCFrame
 					else
-						if Environment.Settings.Sensitivity > 0 then
-							Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)})
-							Animation:Play()
-						else
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)
-						end
+						Camera.CFrame = targetCFrame
 					end
 				end
 
