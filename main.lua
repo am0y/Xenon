@@ -26,7 +26,6 @@ local LocalPlayer = Players.LocalPlayer
 --// Variables
 
 local RequiredDistance, Typing, Running, Animation, ServiceConnections = 2000, false, false, nil, {}
-Environment.TriggerbotDebounce = false
 
 --// Script Settings
 
@@ -150,23 +149,16 @@ end)
 local function Load()
 	ServiceConnections.RenderSteppedConnection = RunService.RenderStepped:Connect(function()
 		if Environment.FOVSettings.Enabled and Environment.Settings.Enabled then
-			local shouldBeVisible = Environment.FOVSettings.Visible
-			
 			Environment.FOVCircle.Radius = Environment.FOVSettings.Amount
 			Environment.FOVCircle.Thickness = Environment.FOVSettings.Thickness
 			Environment.FOVCircle.Filled = Environment.FOVSettings.Filled
 			Environment.FOVCircle.NumSides = Environment.FOVSettings.Sides
-			Environment.FOVCircle.Color = Environment.Locked and Environment.FOVSettings.LockedColor or Environment.FOVSettings.Color
+			Environment.FOVCircle.Color = Environment.FOVSettings.Color
 			Environment.FOVCircle.Transparency = Environment.FOVSettings.Transparency
+			Environment.FOVCircle.Visible = Environment.FOVSettings.Visible
 			Environment.FOVCircle.Position = Vector2(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
-			
-			if Environment.FOVCircle.Visible ~= shouldBeVisible then
-				Environment.FOVCircle.Visible = shouldBeVisible
-			end
 		else
-			if Environment.FOVCircle.Visible then
-				Environment.FOVCircle.Visible = false
-			end
+			Environment.FOVCircle.Visible = false
 		end
 
 		if Running and Environment.Settings.Enabled then
@@ -174,22 +166,10 @@ local function Load()
 
 			if Environment.Locked then
     if Environment.Settings.Triggerbot and Environment.Locked.Character and Environment.Locked.Character:FindFirstChild(Environment.Settings.LockPart) then
-        if not Environment.TriggerbotDebounce then
-            Environment.TriggerbotDebounce = true
-            task.spawn(function()
-                local delayTime = Environment.Settings.TriggerbotDelay
-                if delayTime > 0 then
-                    task.wait(delayTime)
-                end
-                if Environment.Locked then  -- Check if still locked before firing
-                    mouse1press()
-                    task.wait(0.01)  -- Small consistent delay
-                    mouse1release()
-                end
-                task.wait(0.05)  -- Additional small delay before allowing next trigger
-                Environment.TriggerbotDebounce = false
-            end)
-        end
+        task.wait(Environment.Settings.TriggerbotDelay)
+        mouse1press()
+        task.wait()
+        mouse1release()
     end
 				if Environment.Settings.ThirdPerson then
 					Environment.Settings.ThirdPersonSensitivity = mathclamp(Environment.Settings.ThirdPersonSensitivity, 0.1, 5)
@@ -279,7 +259,6 @@ end
 Environment.Functions = {}
 
 function Environment.Functions:Exit()
-    Environment.TriggerbotDebounce = false
 	for _, v in next, ServiceConnections do
 		v:Disconnect()
 	end
