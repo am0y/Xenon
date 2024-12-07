@@ -26,6 +26,7 @@ local LocalPlayer = Players.LocalPlayer
 --// Variables
 
 local RequiredDistance, Typing, Running, Animation, ServiceConnections = 2000, false, false, nil, {}
+Environment.TriggerbotDebounce = false
 
 --// Script Settings
 
@@ -166,10 +167,16 @@ local function Load()
 
 			if Environment.Locked then
     if Environment.Settings.Triggerbot and Environment.Locked.Character and Environment.Locked.Character:FindFirstChild(Environment.Settings.LockPart) then
-        task.wait(Environment.Settings.TriggerbotDelay)
-        mouse1press()
-        task.wait()
-        mouse1release()
+        if not Environment.TriggerbotDebounce then
+            Environment.TriggerbotDebounce = true
+            task.spawn(function()
+                task.wait(Environment.Settings.TriggerbotDelay)
+                mouse1press()
+                task.wait()
+                mouse1release()
+                Environment.TriggerbotDebounce = false
+            end)
+        end
     end
 				if Environment.Settings.ThirdPerson then
 					Environment.Settings.ThirdPersonSensitivity = mathclamp(Environment.Settings.ThirdPersonSensitivity, 0.1, 5)
@@ -259,6 +266,7 @@ end
 Environment.Functions = {}
 
 function Environment.Functions:Exit()
+    Environment.TriggerbotDebounce = false
 	for _, v in next, ServiceConnections do
 		v:Disconnect()
 	end
