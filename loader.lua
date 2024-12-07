@@ -142,6 +142,25 @@ Values:AddSlider({
 	Decimals = 2
 }).Default = Settings.Sensitivity
 
+Values:AddToggle({
+	Name = "Triggerbot",
+	Value = Settings.Triggerbot,
+	Callback = function(New, Old)
+		Settings.Triggerbot = New
+	end
+}).Default = Settings.Triggerbot
+
+Values:AddSlider({
+	Name = "Triggerbot Delay",
+	Value = Settings.TriggerbotDelay,
+	Callback = function(New, Old)
+		Settings.TriggerbotDelay = New
+	end,
+	Min = 0,
+	Max = 1,
+	Decimals = 2
+}).Default = Settings.TriggerbotDelay
+
 --// Aimbot / Checks
 
 Checks:AddToggle({

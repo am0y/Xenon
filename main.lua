@@ -42,7 +42,9 @@ Environment.Settings = {
 	LockPart = "Head", -- Body part to lock on
 	Prediction = false,
 	PredictionAmount = 0.165,
-    StickyAim = false
+    StickyAim = false,
+    Triggerbot = false,
+    TriggerbotDelay = 0.1
 }
 
 Environment.FOVSettings = {
@@ -163,6 +165,12 @@ local function Load()
 			GetClosestPlayer()
 
 			if Environment.Locked then
+    if Environment.Settings.Triggerbot and Environment.Locked.Character and Environment.Locked.Character:FindFirstChild(Environment.Settings.LockPart) then
+        task.wait(Environment.Settings.TriggerbotDelay)
+        mouse1press()
+        task.wait()
+        mouse1release()
+    end
 				if Environment.Settings.ThirdPerson then
 					Environment.Settings.ThirdPersonSensitivity = mathclamp(Environment.Settings.ThirdPersonSensitivity, 0.1, 5)
 
@@ -285,7 +293,9 @@ function Environment.Functions:ResetSettings()
 		LockPart = "Head",
 		Prediction = false,
 		PredictionAmount = 0.165,
-        StickyAim = false
+        StickyAim = false,
+        Triggerbot = false,
+        TriggerbotDelay = 0.1
 	}
 
 	Environment.FOVSettings = {
